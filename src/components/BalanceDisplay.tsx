@@ -38,7 +38,7 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
         const balance = await api.getBalance({ accessCode, userId, baseUrl });
         setBalance(balance);
       } catch (err) {
-        setError(err.message || 'Failed to fetch balance.');
+        setError(err instanceof Error ? err.message : 'Failed to fetch balance.');
       } finally {
         setLoading(false);
       }
@@ -52,7 +52,7 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
       <div style={{ textAlign: 'center' }}>
         <WalletConnectButton
           connected={false}
-          onConnect={onConnectWallet || (() => {})}
+          onConnect={onConnectWallet || (() => { })}
         />
       </div>
     );

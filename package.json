@@ -31,6 +31,14 @@
     "trailingComma": "es5"
   },
   "name": "one-wallet-react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ankursingh0313/one-wallet-react.git"
+  },
+  "homepage": "https://github.com/ankursingh0313/one-wallet-react",
+  "bugs": {
+    "url": "https://github.com/ankursingh0313/one-wallet-react/issues"
+  },
   "author": "ankursingh0313",
   "module": "dist/one-wallet-react.esm.js",
   "size-limit": [
