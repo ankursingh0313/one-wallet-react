@@ -1,9 +1,15 @@
 import React, { useState, useCallback, memo } from 'react';
+import { WalletConnectButton } from './WalletConnectButton';
+import { api } from '../api';
 
 export interface WithdrawProps {
     accessCode: string;
     userId: string;
+    baseUrl?: string;
     onWithdrawSuccess?: (amount: number) => void;
+    // Wallet Connection Props
+    isWalletConnected?: boolean;
+    onConnectWallet?: () => void;
     // Customization Props
     title?: string;
     buttonText?: string;
@@ -15,100 +21,138 @@ export interface WithdrawProps {
     className?: string;
 }
 
-export const Withdraw: React.FC<WithdrawProps> = memo(({
-    accessCode,
-    userId,
-    onWithdrawSuccess,
-    title = 'Withdraw',
-    buttonText = 'Withdraw',
-    placeholder = 'Enter amount',
-    containerStyle,
-    inputStyle,
-    buttonStyle,
-    labelStyle,
-    className,
-}) => {
-    const [amount, setAmount] = useState<string>('');
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
+export const Withdraw: React.FC<WithdrawProps> = memo(
+    ({
+        accessCode,
+        userId,
+        baseUrl,
+        onWithdrawSuccess,
+        isWalletConnected = true,
+        onConnectWallet,
+        title = 'Withdraw',
+        buttonText = 'Withdraw',
+        placeholder = 'Enter amount',
+        containerStyle,
+        inputStyle,
+        buttonStyle,
+        labelStyle,
+        className,
+    }) => {
+        const [amount, setAmount] = useState<string>('');
+        const [loading, setLoading] = useState(false);
+        const [message, setMessage] = useState<string | null>(null);
+        const [error, setError] = useState<string | null>(null);
 
-    const handleWithdraw = useCallback(async () => {
-        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-            setError('Please enter a valid positive amount.');
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-        setMessage(null);
-
-        try {
-            // Simulate API call
-            await new Promise(res => setTimeout(res, 1000));
-
-            console.log(`Withdrawing ${amount} for user ${userId} with code ${accessCode}`);
-
-            setMessage(`Successfully withdrew ${amount} tokens.`);
-            if (onWithdrawSuccess) {
-                onWithdrawSuccess(Number(amount));
+        const handleWithdraw = useCallback(async () => {
+            if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+                setError('Please enter a valid positive amount.');
+                return;
             }
-            setAmount('');
-        } catch (err) {
-            setError('Failed to process withdrawal.');
-        } finally {
-            setLoading(false);
-        }
-    }, [amount, accessCode, userId, onWithdrawSuccess]);
 
-    return (
-        <div
-            className={className}
-            style={{
-                border: '1px solid #ccc',
-                padding: '1rem',
-                borderRadius: '8px',
-                maxWidth: '300px',
-                ...containerStyle
-            }}
-        >
-            <h3>{title}</h3>
-            <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', ...labelStyle }}>Amount:</label>
-                <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder={placeholder}
+            setLoading(true);
+            setError(null);
+            setMessage(null);
+
+            try {
+                await api.withdraw(Number(amount), { accessCode, userId, baseUrl });
+
+                console.log(
+                    `Withdrawing ${amount} for user ${userId} with code ${accessCode}`
+                );
+
+                setMessage(`Successfully withdrew ${amount} tokens.`);
+                if (onWithdrawSuccess) {
+                    onWithdrawSuccess(Number(amount));
+                }
+                setAmount('');
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to process withdrawal.');
+            } finally {
+                setLoading(false);
+            }
+        }, [amount, accessCode, userId, baseUrl, onWithdrawSuccess]);
+
+        if (!isWalletConnected) {
+            return (
+                <div
+                    className={className}
+                    style={{
+                        border: '1px solid #ccc',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        maxWidth: '300px',
+                        textAlign: 'center',
+                        ...containerStyle,
+                    }}
+                >
+                    <div style={{ marginBottom: '1rem' }}>
+                        Please connect your wallet to withdraw.
+                    </div>
+                    <WalletConnectButton
+                        connected={false}
+                        onConnect={onConnectWallet || (() => { })}
+                    />
+                </div>
+            );
+        }
+
+        return (
+            <div
+                className={className}
+                style={{
+                    border: '1px solid #ccc',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    maxWidth: '300px',
+                    ...containerStyle,
+                }}
+            >
+                <h3>{title}</h3>
+                <div style={{ marginBottom: '1rem' }}>
+                    <label
+                        style={{ display: 'block', marginBottom: '0.5rem', ...labelStyle }}
+                    >
+                        Amount:
+                    </label>
+                    <input
+                        type="number"
+                        value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                        placeholder={placeholder}
+                        style={{
+                            width: '100%',
+                            padding: '0.5rem',
+                            boxSizing: 'border-box',
+                            ...inputStyle,
+                        }}
+                        disabled={loading}
+                    />
+                </div>
+                <button
+                    onClick={handleWithdraw}
+                    disabled={loading}
                     style={{
                         width: '100%',
                         padding: '0.5rem',
-                        boxSizing: 'border-box',
-                        ...inputStyle
+                        backgroundColor: '#f44336', // Red for withdraw
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        ...buttonStyle,
                     }}
-                    disabled={loading}
-                />
+                >
+                    {loading ? 'Processing...' : buttonText}
+                </button>
+                {message && (
+                    <div style={{ marginTop: '1rem', color: 'green' }}>{message}</div>
+                )}
+                {error && (
+                    <div style={{ marginTop: '1rem', color: 'red' }}>{error}</div>
+                )}
             </div>
-            <button
-                onClick={handleWithdraw}
-                disabled={loading}
-                style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    backgroundColor: '#f44336', // Red for withdraw
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    ...buttonStyle
-                }}
-            >
-                {loading ? 'Processing...' : buttonText}
-            </button>
-            {message && <div style={{ marginTop: '1rem', color: 'green' }}>{message}</div>}
-            {error && <div style={{ marginTop: '1rem', color: 'red' }}>{error}</div>}
-        </div>
-    );
-});
+        );
+    }
+);
 
 Withdraw.displayName = 'Withdraw';

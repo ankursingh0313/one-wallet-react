@@ -113,6 +113,22 @@ const Header = () => {
 };
 ```
 
+## Wallet Connection
+
+All components (`Deposit`, `Withdraw`, `Hybrid`, `BalanceDisplay`) support a wallet connection check.
+
+- `isWalletConnected` (boolean): If `false`, the component hides its main content and shows a "Connect Wallet" button. Defaults to `true`.
+- `onConnectWallet` (function): Callback function triggered when the "Connect Wallet" button is clicked.
+
+```tsx
+<Hybrid
+  accessCode="123"
+  userId="456"
+  isWalletConnected={isWalletConnected}
+  onConnectWallet={() => connectWallet()}
+/>
+```
+
 ## Customization
 
 All form components (`Deposit`, `Withdraw`, `Hybrid`) accept the following style props:
