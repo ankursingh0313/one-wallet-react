@@ -1,103 +1,143 @@
-# TSDX User Guide
+# one-wallet-react
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+A React library for wallet operations, providing customizable components for deposits, withdrawals, and balance display.
 
-> This TSDX setup is meant for developing libraries (not apps!) that can be published to NPM. If you’re looking to build a Node app, you could use `ts-node-dev`, plain `ts-node`, or simple `tsc`.
-
-> If you’re new to TypeScript, checkout [this handy cheatsheet](https://devhints.io/typescript)
-
-## Commands
-
-TSDX scaffolds your new library inside `/src`.
-
-To run TSDX, use:
+## Installation
 
 ```bash
-npm start # or yarn start
+npm install one-wallet-react
+# or
+yarn add one-wallet-react
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
+## Components
 
-To do a one-off build, use `npm run build` or `yarn build`.
+This library exports the following components:
 
-To run tests, use `npm test` or `yarn test`.
+- `Deposit`: A form for depositing funds.
+- `Withdraw`: A form for withdrawing funds.
+- `Hybrid`: A tabbed interface combining both Deposit and Withdraw.
+- `BalanceDisplay`: A component to show the user's current balance.
+- `WalletConnectButton`: A button to connect a wallet (basic implementation).
 
-## Configuration
+## Usage
 
-Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
+### 1. Hybrid Component (Recommended)
 
-### Jest
+The `Hybrid` component is the most versatile, allowing users to switch between depositing and withdrawing.
 
-Jest tests are set up to run with `npm test` or `yarn test`.
+```tsx
+import React from 'react';
+import { Hybrid } from 'one-wallet-react';
 
-### Bundle Analysis
+const WalletPage = () => {
+  const handleTransactionSuccess = (type: 'deposit' | 'withdraw', amount: number) => {
+    console.log(`${type} successful: ${amount}`);
+    // Refresh balance or show notification
+  };
 
-[`size-limit`](https://github.com/ai/size-limit) is set up to calculate the real cost of your library with `npm run size` and visualize the bundle with `npm run analyze`.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```txt
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
+  return (
+    <Hybrid
+      accessCode="USER_ACCESS_CODE"
+      userId="USER_ID"
+      onTransactionSuccess={handleTransactionSuccess}
+      // Optional Customization
+      depositLabel="Add Funds"
+      withdrawLabel="Cash Out"
+      containerStyle={{ border: '1px solid #ddd', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}
+      activeTabStyle={{ color: '#007bff', borderBottom: '2px solid #007bff' }}
+    />
+  );
+};
 ```
 
-### Rollup
+### 2. Deposit Component
 
-TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
+Use this if you only need the deposit functionality.
 
-### TypeScript
+```tsx
+import React from 'react';
+import { Deposit } from 'one-wallet-react';
 
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
-
-## Continuous Integration
-
-### GitHub Actions
-
-Two actions are added by default:
-
-- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
-- `size` which comments cost comparison of your library on every pull request using [`size-limit`](https://github.com/ai/size-limit)
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
-
-```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
-
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
-}
+const DepositPage = () => {
+  return (
+    <Deposit
+      accessCode="USER_ACCESS_CODE"
+      userId="USER_ID"
+      onDepositSuccess={(amount) => console.log(`Deposited: ${amount}`)}
+      title="Top Up Wallet"
+      buttonText="Pay Now"
+      buttonStyle={{ backgroundColor: '#28a745' }}
+    />
+  );
+};
 ```
 
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
+### 3. Withdraw Component
 
-## Module Formats
+Use this if you only need the withdraw functionality.
 
-CJS, ESModules, and UMD module formats are supported.
+```tsx
+import React from 'react';
+import { Withdraw } from 'one-wallet-react';
 
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
+const WithdrawPage = () => {
+  return (
+    <Withdraw
+      accessCode="USER_ACCESS_CODE"
+      userId="USER_ID"
+      onWithdrawSuccess={(amount) => console.log(`Withdrew: ${amount}`)}
+      title="Request Payout"
+      buttonText="Withdraw Funds"
+      buttonStyle={{ backgroundColor: '#dc3545' }}
+    />
+  );
+};
+```
 
-## Named Exports
+### 4. BalanceDisplay Component
 
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
+Displays the user's balance.
 
-## Including Styles
+```tsx
+import React from 'react';
+import { BalanceDisplay } from 'one-wallet-react';
 
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
+const Header = () => {
+  return (
+    <header>
+      <h1>My App</h1>
+      <BalanceDisplay accessCode="USER_ACCESS_CODE" userId="USER_ID" />
+    </header>
+  );
+};
+```
 
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
+## Customization
 
-## Publishing to NPM
+All form components (`Deposit`, `Withdraw`, `Hybrid`) accept the following style props:
 
-We recommend using [np](https://github.com/sindresorhus/np).
+- `containerStyle`: Style for the outer container.
+- `inputStyle`: Style for the input field.
+- `buttonStyle`: Style for the action button.
+- `labelStyle`: Style for the input label.
+- `className`: CSS class for the container.
+
+And label props:
+
+- `title`: Component title (for Deposit/Withdraw).
+- `buttonText`: Text on the action button.
+- `placeholder`: Placeholder text for the input.
+
+The `Hybrid` component also accepts:
+
+- `tabStyle`: Style for the tabs.
+- `activeTabStyle`: Style for the active tab.
+- `depositLabel`: Label for the deposit tab.
+- `withdrawLabel`: Label for the withdraw tab.
+- `depositProps`: Props object passed to the internal Deposit component.
+- `withdrawProps`: Props object passed to the internal Withdraw component.
+
+## Optimization
+
+All components are optimized using `React.memo` to prevent unnecessary re-renders. Event handlers are memoized with `useCallback`.
